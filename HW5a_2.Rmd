@@ -1,0 +1,186 @@
+---
+output: pdf_document
+---
+
+```{r include=FALSE}
+library(formatR)
+knitr::opts_chunk$set(tidy.opts=list(width.cutoff = 80), tidy = TRUE)
+```
+
+# Intro to Data Science - HW 5
+
+##### Copyright 2023, Jeffrey Stanton, Jeffrey Saltz, and Jasmina Tacheva
+
+```{r}
+# Enter your name here: Alanna Pellecchia
+```
+
+### Attribution statement: (choose only one and delete the rest)
+
+```{r}
+# 1. I did this homework by myself, with help from the book and the professor.
+```
+
+
+```{r}
+# load packages
+library(RCurl)
+library(tidyverse)
+library(curl)
+```
+
+Reminders of things to practice from previous weeks: <br>
+Descriptive statistics: 	mean( ) max( ) min( )<br>
+Coerce to numeric:		as.numeric( )<br>
+
+## Part 1: Use the Starter Code 
+
+Below, I have provided a starter file to help you. <br>
+
+Each of these lines of code **must be commented** (the comment must that explains what is going on, so that I know you understand the code and results).
+
+```{r}
+#install.packages('RCurl')
+#install.packages('jsonlite')
+# load and install packages
+library(RCurl)
+library(jsonlite)
+# store url in dataset var
+dataset <- getURL("https://intro-datascience.s3.us-east-2.amazonaws.com/role.json")
+# convert from json into list 
+readlines <- jsonlite::fromJSON(dataset)
+# store list data in dataframe 
+df <- readlines$objects$person
+```
+
+A.	Explore the **df** dataframe (e.g., using head() or whatever you think is best).
+
+```{r}
+# use head to see first few rows
+head(df)
+```
+
+B.	Explain the dataset <br>
+o	What is the dataset about? <br>
+o	How many rows are there and what does a row represent?<br>
+o	How many columns and what does each column represent?<br>
+
+```{r}
+# the dataset is a list of senators and their info. 
+# there are 100 rows, each row is a senator.
+# there are 17 columns.
+# there are four ids: bioguideid, osid, pvsid, and cspan id.
+# there is first name, last name, middle name, and full name.
+# there is also a name mod (ex. Jr) and a nickname.
+# there are two gender columns.
+# there is the birthday and the link to their site.
+# there is also their twitter and youtube username. 
+```
+
+## Part 2: Investigate the resulting dataframe 
+
+A.	Describe what you see when you run the **table()** function on the **gender** variable.
+
+```{r}
+# it shows the number of female and male entries. 
+table(df$gender)
+```
+
+A1.	Generate the count of number of females and number of males, using the tidyverse **group_by()**, **summarise()** and **n()** functions.
+
+```{r}
+# female is 24, male is 76. 
+# the table function above easily generates those numbers. 
+```
+
+B. How many senators are women?
+
+```{r}
+# 24.
+```
+
+C.	How many senators don't have a YouTube account?
+
+```{r}
+# check to see how many rows in youtubeid come up as NA
+# 27 senators have no account
+is.na(df$youtubeid)
+```
+
+D. Show how many senators ***do*** have a YouTube account.  
+
+```{r}
+# remove NA from df, filter into new dataframe 
+youtubers <- filter(df, !is.na(df$youtubeid))
+# show # of rows and columns
+str(youtubers)
+# 73 have a youtube account. 
+```
+
+E.	How many women senators have a YouTube account? 
+
+```{r}
+# display gender table from youtubers df
+table(youtubers$gender)
+# 16 women have youtube accounts. 
+```
+
+F.	Create a new dataframe called **youtubeWomen** that only includes women senators who have a YouTube account.   
+
+```{r}
+# filter for only rows with female as gender
+# store in new dataframe
+youtubeWomen <- filter(youtubers, youtubers$gender == 'female')
+```
+
+G.	What does running this line of code do? Explain in a comment: 
+
+```{r}
+# it adds a new column - year
+# this is the birth year of each senator in youtubeWomen. 
+# it does this by creating a substring from birthday. 
+youtubeWomen$year <- substr(youtubeWomen$birthday,1,4)
+```
+
+H.	Use this new variable to calculate the mean **birthyear** in **youtubeWomen**. <br>
+**Hint:** You may need to convert it to numeric first using the **as.numeric()** function.
+
+```{r}
+# convert year from character to numeric
+youtubeWomen$year <- as.numeric(youtubeWomen$year)
+# take mean = 1954.875
+mean(youtubeWomen$year)
+```
+
+I.	Make a histogram of the **birthyears** of senators in **youtubeWomen**. Add a comment describing the shape of the distribution.
+
+```{r}
+# histogram
+hist(youtubeWomen$year)
+# normal distribution
+```
+
+J. Create a dataframe called **youtubeMen** which only includes male senators with a youTube account. Repeat steps G & H for this dataframe and create a histogram of the birthyears in it. Compare the shape and properties of this histogram to the one in H.
+
+```{r}
+# create youtubeMen by filtering youtuber df for male
+youtubeMen <- filter(youtubers, youtubers$gender == 'male')
+# substring birthday, store in year column
+youtubeMen$year <- substr(youtubeMen$birthday,1,4)
+# convert year to numeric 
+youtubeMen$year <- as.numeric(youtubeMen$year)
+# take mean = 1955.439 
+mean(youtubeMen$year)
+# histogram
+hist(youtubeMen$year)
+# it is a similar distribution, but a much smoother curve.
+```
+
+K. Take a look at [this article](https://www.theguardian.com/us-news/ng-interactive/2018/nov/15/new-congress-us-house-of-representatives-senate) - explore its interactive features and focus specifically on the section on **gender**. Relating what you learned from the article back to our Senate data, who might feel left out and/or unrepresented based on the current gender composition of the Senate? Explain in a brief comment.
+
+```{r}
+# anyone who is not a man may feel left out.
+# there are far less women senators than men.
+# in addition, there appear to be no non-binary senators. 
+```
+
